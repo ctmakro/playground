@@ -1,0 +1,13 @@
+{
+  "name": "my-project",
+  "version": "1.0.0",
+  "scripts": {
+    "build": "traceur --outputLanguage es6 --experimental --dir src lib"
+  },
+  "devDependencies": {
+
+  },
+  "dependencies": {
+
+  }
+}
