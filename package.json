@@ -2,7 +2,8 @@
   "name": "my-project",
   "version": "1.0.0",
   "scripts": {
-    "build": "traceur --outputLanguage es6 --experimental --dir src lib"
+    "build": "traceur --outputLanguage es6 --experimental --dir src lib",
+    "compile": "tsc ts/hellotype.ts"
   },
   "devDependencies": {
 
