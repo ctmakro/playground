@@ -63,12 +63,12 @@ class delta:
         # print('ash',actual_sliders_height)
         # for s in sliders:
         #     print('slider cartesian', s)
-
+        def normalized(v):
+            norm = np.sqrt(np.sum(v**2))
+            return v / norm
         # Trilateration to find the target point, given slider positions
         def trilaterate(sliders):
-            def normalized(v):
-                norm = np.sqrt(np.sum(v**2))
-                return v / norm
+
             # initial guess
             t = np.array([0,0,-10]).astype('float32')
             v = t*0
@@ -84,7 +84,7 @@ class delta:
                     total_force+=force
                     # print('dtdist',delta_dist)
 
-                    if abs(delta_dist) < 1e-3:
+                    if abs(delta_dist) < 1e-2:
                         tick+=1
 
                 if tick>=3:
@@ -92,7 +92,7 @@ class delta:
                 else:
                     tick=0
 
-                v += total_force
+                v += total_force # dampen-spring simulation
                 v *= 0.9
                 t += v
             print('(fk) took',i+1,'iteration to solve trilateration')
