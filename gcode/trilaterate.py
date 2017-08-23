@@ -24,8 +24,8 @@ def trilaterate(points, distances):
     y = (r1**2 - r3**2 + i**2 + j**2) / (2*j) - (i/j) * x
     b = r1**2 - x**2 - y**2
 
-	# floating point math flaw in IEEE 754 standard
-	# see https://github.com/gheja/trilateration.js/issues/2
+    # floating point math flaw in IEEE 754 standard
+    # see https://github.com/gheja/trilateration.js/issues/2
     if (np.abs(b) < 0.0000000001):
         b = 0
 
