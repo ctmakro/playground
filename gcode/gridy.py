@@ -97,7 +97,7 @@ def main():
 # main()
 
 def main2():
-    code('G33P5')
+    # code('G33P5')
     code('G28')
     code('G90')
 
@@ -108,10 +108,12 @@ def main2():
 
     # step1: mesh grid points
 
+    scale = 1
     ps = []
-    for x in range(-50,51,20):
-        for y in range(-50,51,20):
-            ps.append((x,y))
+    for x in range(-100,100,17):
+        for y in range(-100,100,17):
+            if (x+15)**2 + (y-15)**2 < 75**2 and x**2 + (y+20)**2 < 75**2:
+                ps.append((x*scale,y*scale))
 
     # step2: sort by distance, find closest
 
@@ -143,6 +145,7 @@ def main2():
         code('G1 X{} Y{}'.format(x,y))
         code('G30') # probe
 
+    code('G28')
     save('proby')
 
 main2()

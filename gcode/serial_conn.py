@@ -1,8 +1,23 @@
 import serial,time,math
 
+def choose_serial_connection():
+    import serial.tools.list_ports as stlp
+
+    l = stlp.comports()
+    if len(l) == 0:
+        raise Exception('No available serial devices found')
+
+    print('Please choose from the following serial ports.')
+    for i,s in enumerate(l):
+        print('({}) {}'.format(i,s))
+
+    k = input('Please enter a number [{}-{}]'.format(0, len(l)-1))
+    if len(k)==0: k=0
+    return l[int(k)].device
+
 class kossel:
     def __init__(self):
-        self.ser = serial.Serial('COM11',250000,timeout=0.2)
+        self.ser = serial.Serial(choose_serial_connection(),250000,timeout=0.2)
         print('(kossel)serial name: ',self.ser.name)
         self.linenumber = 0
 
@@ -63,31 +78,36 @@ class kossel:
         self.command(c)
         return self.waitok(timeout)
 
-def main():
-    with open('proby.gcode','r') as f:
-        probing_code = f.read()
+global kos
+kos = kossel()
+def get_kossel():
+    global kos
+    return kos
 
-    k = kossel()
+def readfile(filename):
+    with open(filename,'r') as f:
+        content = f.read()
+    return content
+
+def run_gcode_collect_lines(gcode):
+    gcode = gcode.split('\n')
+    gcode = filter(lambda x:len(x)>0, gcode)
+
+    k = get_kossel()
     print('KOSSEL READY')
 
-    def run_gcode_collect_lines(filename):
-        with open(filename,'r') as f:
-            gcode = f.read().split('\n')
+    result_lines = []
+    for line in gcode:
+        result_lines+=k.command_ok(line,300)
 
-        gcode = filter(lambda x:len(x)>0, gcode)
+    del k
+    return result_lines
 
-        result_lines = []
-        for line in gcode:
-            result_lines+=k.command_ok(line,300)
-
-        return result_lines
-
-    gcode_result = run_gcode_collect_lines('proby.gcode')
+def main():
+    gcode_result = run_gcode_collect_lines(readfile('proby.gcode'))
     probing_result = list(filter(lambda x:x[0:3]=='Bed', gcode_result))
 
     print(probing_result)
-    del k
-
 
     idx = 0
     def getline():
