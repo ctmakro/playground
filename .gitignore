@@ -51,3 +51,7 @@ Temporary Items
 
 npm-debug.log
 *.pyc
+
+photo_2*
+python/links*
+*.pickle
