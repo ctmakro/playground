@@ -225,7 +225,7 @@ def solve():
 
     # serialize printer's parameter into 1-d np array
     def numpyize(p):
-        n = np.array([p.dr,p.zh]+list(p.toa[0:3])+list(p.tes))
+        n = np.array([p.dr,p.zh]+list(p.toa[0:3])+list(p.tes), dtype='float32')
         assert len(n) == 8
         return n
 
@@ -249,9 +249,13 @@ def solve():
 
     # 3. create the optimizable function
     def error(n):
+
+        mode = 'p2p' # 'mse'
+
         actual = printerize(n)
         hits = []
         total_error = 0
+        maxe,mine = -9999,9999
         for p in points:
             probe_point = np.array(p)
             # probe_point[0:2] += actual.po # add offset to it
@@ -268,20 +272,83 @@ def solve():
             z = actual.probe_at(h[0:2])[2]
 
             # what's the difference between the Z we should reach, and the Z actually reached?
-            diff = (z-h[2])**2
-            total_error += diff
+            # if mode == 'mse':
+            diff0 = (z-h[2])**2
+            total_error += diff0
+            if mode == 'p2p':
+                diff = z-h[2]
+                if diff>maxe: maxe = diff
+                if diff<mine: mine = diff
 
-        return total_error
+        if mode=='mse':
+            return total_error
+        else:
+            return maxe - mine + total_error * 0.01
+
+    def minimize(f,x):
+        l = len(x)
+        eps = 1e-4
+
+        lastfx = f(x)
+        lastx = x.copy()
+
+        bestfx = f(x)
+        bestx = x.copy()
+
+        cntr = 0
+
+        step = 0.05
+        n=0
+
+        while 1:
+            d = []
+
+            fx = f(x)
+            print(n, 'err:', fx, cntr, step)
+            n+=1
+
+            if lastfx < fx:
+                step = step*0.93
+            else:
+                step = step*1.05
+
+
+            lastfx = fx
+            lastx = x.copy()
+
+            if bestfx<fx:
+                cntr=cntr+1
+            else:
+                cntr = 0
+                bestfx = fx
+                bestx = x.copy()
+
+            if cntr>50 or step<1e-8:
+                return bestx
+
+            for i in range(l):
+                xi = x.copy()
+                xi[i] = xi[i]+eps
+
+                d.append((f(xi)-fx) / eps)
+
+            d = np.array(d, dtype='float32')
+
+            x = x - d * step
 
     # 4. optimize!
     print('optimizing...')
-    res = minimize(error, x0, method='nelder-mead',
-        options = {'xatol':3e-5,'fatol':3e-5, 'disp':True}
-    )
-    # res = minimize(error, x0, method='powell',
-    #     options = {'disp':True}
+    # res = minimize(error, x0, method='nelder-mead',
+    #     options = {'xatol':3e-6,'fatol':3e-6, 'disp':True}
     # )
-    actual = printerize(res.x)
+    # # res = minimize(error, x0, method='powell',
+    # #     options = {'disp':True}
+    # # )
+    # actual = printerize(res.x)
+
+    x = minimize(error, x0)
+    actual = printerize(x)
+
     print('estimated actual printer parameters:')
     print(actual)
     global estimated

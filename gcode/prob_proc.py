@@ -62,15 +62,23 @@ def plotsurf(xyztuple):
     ax.set_ylabel('Y')
     ax.set_zlabel('Z')
 
+    # https://www.reddit.com/r/Python/comments/87lbao/matplotlib_griddata_deprecation_help/
     def grid(x, y, z, resX=32, resY=32):
         from numpy import linspace, meshgrid
-        from matplotlib.mlab import griddata
+        # from matplotlib.mlab import griddata
+        from scipy.interpolate import griddata
 
         "Convert 3 column data to matplotlib grid"
         xi = linspace(min(x), max(x), resX)
         yi = linspace(min(y), max(y), resY)
-        Z = griddata(x, y, z, xi, yi, interp='linear')
-        X, Y = meshgrid(xi, yi)
+
+        xi, yi = np.mgrid[min(x):max(x):resX, min(y):max(y):resY]
+
+        # Z = griddata(x, y, z, xi, yi, interp='linear')
+        Z = griddata((x,y), z, (xi, yi), method='linear')
+
+        # X, Y = meshgrid(xi, yi)
+        X,Y = xi,yi
         return X, Y, Z
 
     X, Y, Z = grid(xs, ys, zs)
@@ -78,7 +86,7 @@ def plotsurf(xyztuple):
     ax2.contourf(X, Y, Z)
 
     ax2.plot((-10, 10), (0, 0), 'w-')
-    ax2.plot((0, 0), (-10, 10), 'w-') 
+    ax2.plot((0, 0), (-10, 10), 'w-')
 
     plt.show()
 
